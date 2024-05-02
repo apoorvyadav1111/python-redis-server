@@ -9,10 +9,13 @@ def main():
     # Uncomment this to pass the first stage
     #
     server_socket = socket.create_server(("localhost", 6379), reuse_port=True)
-    conn, addr = server_socket.accept() # accept the connection
-    data = conn.recv(1024).decode() # receive the data
-    print(data)
-    conn.sendall("+PONG\r\n".encode()) # send the response
+    while True:
+        conn, addr = server_socket.accept() # accept the connection
+        while True:
+            data = conn.recv(1024).decode()
+            if data == PING:
+                conn.sendall("+PONG\r\n".encode())
+        conn.close()
 
 
 if __name__ == "__main__":
