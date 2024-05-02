@@ -10,7 +10,7 @@ def main():
     #
     server_socket = socket.create_server(("localhost", 6379), reuse_port=True)
     server_socket.accept() # wait for client
-    conn, addr = socket_socket.accept() # accept the connection
+    conn, addr = server_socket.accept() # accept the connection
     data = conn.recv(1024) # receive the data
     print(data)
     conn.sendall(b"+PONG\r\n") # send the response
