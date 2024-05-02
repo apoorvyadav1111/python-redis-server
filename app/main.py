@@ -1,7 +1,7 @@
 # Uncomment this to pass the first stage
 import socket
 
-PING = "*1\r\n$4\r\nping\r\n"
+PING = "*1\r\n$4\r\nPING\r\n"
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!")
