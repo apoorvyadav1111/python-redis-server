@@ -13,6 +13,7 @@ def main():
         conn, addr = server_socket.accept() # accept the connection
         while True:
             data = conn.recv(1024).decode()
+            print(data)
             if data == PING:
                 conn.sendall("+PONG\r\n".encode())
         conn.close()
