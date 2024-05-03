@@ -16,7 +16,7 @@ async def listen_forever(server_socket: socket.socket, loop: asyncio.AbstractEve
     while True:
         client_socket, addr = await loop.sock_accept(server_socket)
         client_socket.setblocking(False)
-        await loop.create_task(handle_client(client_socket, loop))
+        loop.create_task(handle_client(client_socket, loop))
 
 async def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
