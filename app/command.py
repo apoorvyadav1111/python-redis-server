@@ -1,8 +1,11 @@
 class Command:
     @staticmethod
     def echo(data):
-        return f"+{data}\r\n"
-
+        echo_data = f"${len(data)}\r\n"
+        for i in range(len(data)):
+            echo_data += f"{data[i]}\r\n"
+        return echo_data
+        
     @staticmethod
     def get(redis_store, key):
         value = redis_store.get(key)
