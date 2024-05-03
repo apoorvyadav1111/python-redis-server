@@ -16,7 +16,7 @@ def service_connection(key, mask):
     sock = key.fileobj
     data = key.data
 
-    if mask && selectors.EVENT_READ:
+    if mask and selectors.EVENT_READ:
         recv_data = sock.recv(1024).decode()
         if recv_data == PING:
             data.outb = b"+PONG\r\n"
@@ -24,7 +24,7 @@ def service_connection(key, mask):
             print("closing connection to", data.addr)
             sel.unregister(sock)
             sock.close()
-    if mask && selectors.EVENT_WRITE:
+    if mask and selectors.EVENT_WRITE:
         if data.outb:
             sent = sock.send(data.outb)
             data.outb = data.outb[sent:]
