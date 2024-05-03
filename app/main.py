@@ -10,7 +10,8 @@ async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEven
     while data := await loop.sock_recv(client_socket, 1024):
         data = redis_protocol.parse(data.decode())
         if data == ["PING"]:
-            await loop.sock_sendall(client_socket, PONG.encode())
+            response = "+PONG\r\n"
+            await loop.sock_sendall(client_socket, response.encode())
         elif "ECHO" in data:
             response = f"+{data[1]}\r\n"
             await loop.sock_sendall(client_socket, response.encode())
@@ -23,7 +24,7 @@ async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEven
                 await loop.sock_sendall(client_socket, response.encode())
             else:
                 await loop.sock_sendall(client_socket, b"$-1\r\n")
-                
+
 
 
 
