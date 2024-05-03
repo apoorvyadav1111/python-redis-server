@@ -24,7 +24,7 @@ async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEven
         elif command == "SET":
             response = Command.set(KEY_VALUE_STORE, data[1:])
             await loop.sock_sendall(client_socket, response.encode())
-        elif "GET" in data:
+        elif command == "GET":
             response = Command.get(KEY_VALUE_STORE, data[1])
             await loop.sock_sendall(client_socket, response.encode())
 
