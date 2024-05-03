@@ -1,6 +1,7 @@
 # Uncomment this to pass the first stage
 import socket
 import asyncio
+from app.resp.redis_protocol import RedisProtocol
 
 PING = "*1\r\n$4\r\nPING\r\n"
 PONG = "+PONG\r\n"
