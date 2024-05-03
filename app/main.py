@@ -7,8 +7,8 @@ PONG = "+PONG\r\n"
 
 async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEventLoop):
     while data := await loop.sock_recv(client_socket, 1024):
-        if data.encode() == PING:
-            await loop.sock_sendall(client_socket, PONG.decode())
+        if data.decode() == PING:
+            await loop.sock_sendall(client_socket, PONG.encode())
 
 
 
