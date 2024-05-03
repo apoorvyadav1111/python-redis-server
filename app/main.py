@@ -5,6 +5,8 @@ import types
 
 PING = "*1\r\n$4\r\nPING\r\n"
 
+sel = selectors.DefaultSelector()
+
 def accept_connection(sock):
     conn, addr = sock.accept() # accept the connection
     conn.setblocking(False)
@@ -36,7 +38,6 @@ def main():
 
     # Uncomment this to pass the first stage
     #
-    sel = selectors.DefaultSelector()
     server_socket = socket.create_server(("localhost", 6379), reuse_port=True)
     server_socket.listen()
     server_socket.setblocking(False)
