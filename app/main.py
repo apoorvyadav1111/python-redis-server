@@ -18,7 +18,7 @@ async def listen_forever(server_socket: socket.socket, loop: asyncio.AbstractEve
         client_socket.setblocking(False)
         await loop.create_task(handle_client(client_socket, loop))
 
-def main():
+async def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!")
 
@@ -28,4 +28,4 @@ def main():
     await listen_forever(server_socket, loop)
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
