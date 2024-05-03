@@ -5,7 +5,7 @@ class Command:
 
     @staticmethod
     def get(redis_store, key):
-        value = redis_store.get(key):
+        value = redis_store.get(key)
         if value is None:
             return b"$-1\r\n"
         return value
