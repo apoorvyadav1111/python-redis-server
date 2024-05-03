@@ -2,29 +2,31 @@
 import socket
 import asyncio
 from app.resp.redis_protocol import RedisProtocol
+from app.key_value_store import RedisStore
+from app.command import Command
 
-KEY_VALUE_STORE = {}
+KEY_VALUE_STORE = RedisStore()
 
 async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEventLoop):
     redis_protocol = RedisProtocol()
     while data := await loop.sock_recv(client_socket, 1024):
         data = redis_protocol.parse(data.decode())
-        if data == ["PING"]:
-            response = "+PONG\r\n"
+        if not isinstance(data, list):
+            await loop.sock_sendall(client_socket, b"-ERR\r\n")
+            continue
+        command = data[0].upper()
+        if command == "PING":
+            response = Command.ping()
             await loop.sock_sendall(client_socket, response.encode())
-        elif "ECHO" in data:
-            response = f"+{data[1]}\r\n"
+        elif command == "ECHO":
+            response = Command.echo(data[1:])
             await loop.sock_sendall(client_socket, response.encode())
-        elif "SET" in data:
-            KEY_VALUE_STORE[data[1]] = data[2]
-            await loop.sock_sendall(client_socket, b"+OK\r\n")
+        elif command == "SET":
+            response = Command.set(KEY_VALUE_STORE, data[1:])
+            await loop.sock_sendall(client_socket, response.encode())
         elif "GET" in data:
-            if data[1] in KEY_VALUE_STORE:
-                response = f"${len(KEY_VALUE_STORE[data[1]])}\r\n{KEY_VALUE_STORE[data[1]]}\r\n"
-                await loop.sock_sendall(client_socket, response.encode())
-            else:
-                await loop.sock_sendall(client_socket, b"$-1\r\n")
-
+            response = Command.get(KEY_VALUE_STORE, data[1])
+            await loop.sock_sendall(client_socket, response.encode())
 
 
 

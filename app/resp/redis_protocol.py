@@ -108,6 +108,3 @@ class RedisProtocol:
         value = self.tokens[self.idx][1:]
         self.idx += 1
         return value == 't'
-
-    def encode(self,data):
-        pass
