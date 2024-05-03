@@ -27,5 +27,5 @@ class RedisStore:
             if value.px is not None and time() > value.px:
                 del self.store[key]
                 return None
-            return value
+            return value.value
         return None
