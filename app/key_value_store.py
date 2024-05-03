@@ -24,7 +24,7 @@ class RedisStore:
     def get(self, key: str):
         if key in self.store:
             value = self.store[key]
-            if value.px is not None and time() > value.px:
+            if value.px is not None and time() >= value.px:
                 del self.store[key]
                 return None
             return value.value
