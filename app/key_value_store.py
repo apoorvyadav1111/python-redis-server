@@ -19,7 +19,7 @@ class RedisStore:
         if px is not None:
             self.store[key] = Value(value, time()+px/1000)
         else:
-            self.store[key] = Value(value)
+            self.store[key] = Value(value, None)
     
     def get(self, key: str):
         if key in self.store:
