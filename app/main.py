@@ -39,7 +39,7 @@ def main():
     sel = selectors.DefaultSelector()
     server_socket = socket.create_server(("localhost", 6379), reuse_port=True)
     server_socket.listen()
-    server_socket.setBlocking(False)
+    server_socket.setblocking(False)
     sel.register(server_socket, selectors.EVENT_READ, data=None)
 
     try:
