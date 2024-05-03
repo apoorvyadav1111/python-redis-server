@@ -8,7 +8,7 @@ class Command:
         value = redis_store.get(key)
         if value is None:
             return "$-1\r\n"
-        return value
+        return f"${len(value)}\r\n{value}\r\n"
 
     @staticmethod
     def set(redis_store, data):
