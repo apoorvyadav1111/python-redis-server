@@ -17,14 +17,14 @@ class RedisStore:
     
     def set(self, key: str, value: str, px: int | None = None):
         if px is not None:
-            self.store[key] = Value(value, time()+px)
+            self.store[key] = Value(value, now()+px)
         else:
             self.store[key] = Value(value)
     
     def get(self, key: str):
         if key in self.store:
             value = self.store[key]
-            if value.px is not None and time() >= value.px:
+            if value.px is not None and now() > value.px:
                 del self.store[key]
                 return None
             return value.value
