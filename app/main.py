@@ -1,14 +1,20 @@
 # Uncomment this to pass the first stage
 import socket
 import asyncio
+from redis_protocol import RedisProtocol
 
 PING = "*1\r\n$4\r\nPING\r\n"
 PONG = "+PONG\r\n"
 
 async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEventLoop):
+    redis_protocol = RedisProtocol()
     while data := await loop.sock_recv(client_socket, 1024):
-        if data.decode() == PING:
+        data = redis_protocol.parse(data.decode())
+        if data == ["PING"]:
             await loop.sock_sendall(client_socket, PONG.encode())
+        else:
+            response = "$3\r\nhey\r\n"
+            await loop.sock_sendall(client_socket, response.encode())
 
 
 
