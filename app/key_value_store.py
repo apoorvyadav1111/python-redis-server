@@ -17,7 +17,7 @@ class RedisStore:
     
     def set(self, key: str, value: str, px: int | None = None):
         if px is not None:
-            self.store[key] = Value(value, now()+px)
+            self.store[key] = Value(value, time()+px/1000)
         else:
             self.store[key] = Value(value)
     
