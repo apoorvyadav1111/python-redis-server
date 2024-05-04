@@ -31,6 +31,9 @@ async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEven
             async with lock:
                 response = Command.get(KEY_VALUE_STORE, data[1])
             await loop.sock_sendall(client_socket, response.encode())
+        elif command == "INFO":
+            response = Command.info(data[1:])
+            await loop.sock_sendall(client_socket, response.encode())
 
 
 

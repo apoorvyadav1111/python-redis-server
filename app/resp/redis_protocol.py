@@ -1,3 +1,7 @@
+class Response:
+    def __init__(self, data, kind):
+        self.data = data
+        self.type = kind
 class RedisProtocol:
     def __init__(self):
         self.idx = 0
@@ -108,3 +112,31 @@ class RedisProtocol:
         value = self.tokens[self.idx][1:]
         self.idx += 1
         return value == 't'
+    
+    def encode(self, data: Response):
+        result = ""
+        resp_kind = self.__types_to_symbols[data.type]
+        if data.type == 'array':
+            result += f"{resp_kind}{len(data.data)}\r\n"
+            for item in data.data:
+                result += self.encode(item)
+        elif data.type == 'simple_string':
+            result += f"{resp_kind}{data.data}\r\n"
+        elif data.type == 'bulk_string':
+            result += f"{resp_kind}{len(data.data)}\r\n{data.data}\r\n"
+        elif data.type == 'integer':
+            result += f"{resp_kind}{data.data}\r\n"
+        elif data.type == 'error':
+            result += f"{resp_kind}{data.data}\r\n"
+        elif data.type == 'null':
+            result += f"{resp_kind}\r\n"
+        elif data.type == 'boolean':
+            if data.data:
+                result += f"{resp_kind}t\r\n"
+            else:
+                result += f"{resp_kind}f\r\n"
+        elif data.type == 'null_bulk_string':
+            return "$-1\r\n"
+        return result
+
+
