@@ -6,13 +6,17 @@ from app.key_value_store import RedisStore
 from app.command import Command
 import sys
 import argparse
+from random import choices
+from string import ascii_letters, digits
 
 KEY_VALUE_STORE = RedisStore()
 
 server_meta = {
     "role": "master",
     "replica_host": None,
-    "replica_port": None
+    "replica_port": None,
+    "master_repl_offset": 0,
+    "master_repl_id": "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb"
 }
 
 async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEventLoop):
@@ -76,10 +80,8 @@ if __name__ == "__main__":
         server_meta["role"] = "slave"
         server_meta["replica_host"] = args.replicaof[0]
         server_meta["replica_port"] = args.replicaof[1]
-    print(f"Starting server on port {port}")
-    print(f"Role: {server_meta['role']}"
-          f"Replica Host: {server_meta['replica_host']}"
-          f"Replica Port: {server_meta['replica_port']}")
+    
+    master_repl_id = ''.join(choices(ascii_letters + digits, k=40))
 
     lock = asyncio.Lock()
     asyncio.run(main(port=port))

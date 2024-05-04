@@ -31,9 +31,10 @@ class Command:
     
     @staticmethod
     def info(data, server_meta):
-
         response = ""
         for i in range(0, len(data)):
             if data[i].upper() == "REPLICATION":
                 response += f"# Replication\r\nrole:{server_meta["role"]}\r\n"
+                response += f"master_repl_id:{server_meta["master_repl_id"]}\r\n"
+                response += f"master_repl_offset:{server_meta["master_repl_offset"]}\r\n"
                 return RedisProtocol().encode(Response(response, 'bulk_string'))
