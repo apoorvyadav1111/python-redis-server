@@ -36,6 +36,3 @@ class Command:
             if data[i].upper() == "REPLICATION":
                 response += "# Replication\r\nrole:master\r\n"
                 return RedisProtocol().encode(Response(response, 'bulk_string'))
-    
-
-

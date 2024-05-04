@@ -5,8 +5,15 @@ from app.resp.redis_protocol import RedisProtocol
 from app.key_value_store import RedisStore
 from app.command import Command
 import sys
+import argparse
 
 KEY_VALUE_STORE = RedisStore()
+
+server_meta = {
+    "role": "master",
+    "replica_host": None,
+    "replica_port": None
+}
 
 async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEventLoop):
     global lock
@@ -54,13 +61,25 @@ async def main(port: int):
     await listen_forever(server_socket, loop)
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--port", help="Port number to listen on", type=int)
+    parser.add_argument("--replicaof", help="Replicate data to another server", type=str, nargs=2)
+    args = parser.parse_args()
+    port = 6379
     try:
-        if len(sys.argv) == 3 and sys.argv[1] == "--port":
-            port = int(sys.argv[2])
-        else:
-            port = 6379
+        if args.port:
+            port = int(args.port)
     except ValueError:
         print("Invalid port")
         sys.exit(1)
+    if args.replicaof:
+        server_meta["role"] = "replica"
+        server_meta["replica_host"] = args.replicaof[0]
+        server_meta["replica_port"] = args.replicaof[1]
+    print(f"Starting server on port {port}")
+    print(f"Role: {server_meta['role']}"
+          f"Replica Host: {server_meta['replica_host']}"
+          f"Replica Port: {server_meta['replica_port']}")
+
     lock = asyncio.Lock()
     asyncio.run(main(port=port))
