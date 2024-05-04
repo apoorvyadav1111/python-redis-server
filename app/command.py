@@ -30,9 +30,10 @@ class Command:
         return RedisProtocol().encode(Response("PONG", 'simple_string'))
     
     @staticmethod
-    def info(data):
+    def info(data, server_meta):
+
         response = ""
         for i in range(0, len(data)):
             if data[i].upper() == "REPLICATION":
-                response += "# Replication\r\nrole:master\r\n"
+                response += f"# Replication\r\nrole:{server_meta["role"]}\r\n"
                 return RedisProtocol().encode(Response(response, 'bulk_string'))

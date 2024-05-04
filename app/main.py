@@ -39,7 +39,7 @@ async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEven
                 response = Command.get(KEY_VALUE_STORE, data[1])
             await loop.sock_sendall(client_socket, response.encode())
         elif command == "INFO":
-            response = Command.info(data[1:])
+            response = Command.info(data[1:], server_meta)
             await loop.sock_sendall(client_socket, response.encode())
 
 
@@ -73,7 +73,7 @@ if __name__ == "__main__":
         print("Invalid port")
         sys.exit(1)
     if args.replicaof:
-        server_meta["role"] = "replica"
+        server_meta["role"] = "slave"
         server_meta["replica_host"] = args.replicaof[0]
         server_meta["replica_port"] = args.replicaof[1]
     print(f"Starting server on port {port}")
