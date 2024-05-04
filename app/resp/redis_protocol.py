@@ -36,7 +36,8 @@ class RedisProtocol:
             'verbatim_string': '=',
             'map': '%',
             'set': '~',
-            'pushes': '>'
+            'pushes': '>',
+            'null_bulk_string': '$'
         }
     
     def tokenize(self,data):
@@ -136,7 +137,7 @@ class RedisProtocol:
             else:
                 result += f"{resp_kind}f\r\n"
         elif data.type == 'null_bulk_string':
-            return "$-1\r\n"
+            return f"{resp_kind}-1\r\n"
         return result
 
 
