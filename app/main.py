@@ -20,7 +20,7 @@ server_meta = {
 }
 
 async def send_handshake(master_host, master_port):
-    handshake = Command.ping()
+    handshake = Command.ping().encode()
     reader, writer = await asyncio.open_connection(master_host, master_port)
     try:
         writer.write(handshake)
