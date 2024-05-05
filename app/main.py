@@ -78,6 +78,9 @@ async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEven
         elif command == "REPLCONF":
             response = Command.respond_to_replconf()
             await loop.sock_sendall(client_socket, response.encode())
+        elif command == "PSYNC":
+            response = Command.respond_to_psync(server_meta["master_replid"], server_meta["master_repl_offset"])
+            await loop.sock_sendall(client_socket, response.encode())
 
 
 

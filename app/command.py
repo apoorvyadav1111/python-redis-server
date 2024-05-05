@@ -57,4 +57,8 @@ class Command:
     def send_psync(repl_id, offset):
         resp = Response([Response("PSYNC", "bulk_string"), Response(repl_id, "bulk_string"), Response(offset, "bulk_string")], "array")
         return RedisProtocol().encode(resp)
-    
+
+    @staticmethod
+    def respond_to_psync(repl_id, offset):
+        string = f"FULLRESYNC {repl_id} {offset}\r\n"
+        return RedisProtocol().encode(Response(string, 'simple_string'))
