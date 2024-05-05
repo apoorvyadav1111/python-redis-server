@@ -43,8 +43,9 @@ async def send_handshake(master_host, master_port):
         response = RedisProtocol().parse(data.decode())
         if response != "OK":
             raise Exception("Handshake step 3 failed")
-
-        
+        handshake_3 = Command.send_psync("?", "-1").encode()
+        writer.write(handshake_3)
+        await writer.drain()
     finally:
         writer.close()
 

@@ -52,3 +52,9 @@ class Command:
                 response += f"master_repl_offset:{server_meta["master_repl_offset"]}\r\n"
                 print(RedisProtocol().encode(Response(response, 'bulk_string')))
                 return RedisProtocol().encode(Response(response, 'bulk_string'))
+    
+    @staticmethod
+    def send_psync(repl_id, offset):
+        resp = Response([Response("PSYNC", "bulk_string"), Response(repl_id, "bulk_string"), Response(offset, "bulk_string")], "array")
+        return RedisProtocol().encode(resp)
+    
