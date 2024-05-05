@@ -24,15 +24,24 @@ class Command:
                 value["px"] = int(data[i + 1])
         redis_store.set(value["key"], value["value"], value["px"])
         return RedisProtocol().encode(Response("OK", 'simple_string'))
-
+    
     @staticmethod
-    def pong():
+    def send_ping():
+        return RedisProtocol().encode(Response([Response("PING", "bulk_string")],"array"))
+    
+    @staticmethod
+    def respond_to_ping():
         return RedisProtocol().encode(Response("PONG", 'simple_string'))
     
     @staticmethod
-    def ping():
-        return RedisProtocol().encode(Response([Response("PING", "bulk_string")],"array"))
-        
+    def send_replconf(key, value):
+        resp = Response([Response("REPLCONF", "bulk_string"), Response(key, "bulk_string"), Response(value, "bulk_string")], "array")
+        return RedisProtocol().encode(resp)
+    
+    @staticmethod
+    def respond_to_replconf():
+        return RedisProtocol().encode(Response("OK", 'simple_string'))
+
     @staticmethod
     def info(data, server_meta):
         response = ""

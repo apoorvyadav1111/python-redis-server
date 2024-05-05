@@ -20,11 +20,31 @@ server_meta = {
 }
 
 async def send_handshake(master_host, master_port):
-    handshake = Command.ping().encode()
+    handshake_1 = Command.send_ping().encode()
     reader, writer = await asyncio.open_connection(master_host, master_port)
     try:
-        writer.write(handshake)
+        writer.write(handshake_1)
         await writer.drain()
+        data = await reader.read(1024)
+        response = RedisProtocol().parse(data.decode())
+        if response != "PONG":
+            raise Exception("Handshake step 1 failed")
+        handshake_2_1 = Command.send_replconf("listening-port", "6380").encode()
+        writer.write(handshake_2_1)
+        await writer.drain()
+        data = await reader.read(1024)
+        response = RedisProtocol().parse(data.decode())
+        if response != "OK":
+            raise Exception("Handshake step 2 failed")
+        handshake_2_2 = Command.send_replconf("capa", "pysnc2").encode()
+        writer.write(handshake_2_2)
+        await writer.drain()
+        data = await reader.read(1024)
+        response = RedisProtocol().parse(data.decode())
+        if response != "OK":
+            raise Exception("Handshake step 3 failed")
+
+        
     finally:
         writer.close()
 
@@ -38,7 +58,7 @@ async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEven
             continue
         command = data[0].upper()
         if command == "PING":
-            response = Command.pong()
+            response = Command.respond_to_ping()
             await loop.sock_sendall(client_socket, response.encode())
         elif command == "ECHO":
             response = Command.echo(data[1:])
@@ -54,6 +74,10 @@ async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEven
         elif command == "INFO":
             response = Command.info(data[1:], server_meta)
             await loop.sock_sendall(client_socket, response.encode())
+        elif command == "REPLCONF":
+            response = Command.respond_to_replconf()
+            await loop.sock_sendall(client_socket, response.encode())
+
 
 
 
