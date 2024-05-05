@@ -31,7 +31,7 @@ class Command:
     
     @staticmethod
     def ping():
-        return RedisProtocol().encode(Response(Response("PING", "bulk_string"),"array"))
+        return RedisProtocol().encode(Response([Response("PING", "bulk_string")],"array"))
         
     @staticmethod
     def info(data, server_meta):
