@@ -26,9 +26,13 @@ class Command:
         return RedisProtocol().encode(Response("OK", 'simple_string'))
 
     @staticmethod
-    def ping():
+    def pong():
         return RedisProtocol().encode(Response("PONG", 'simple_string'))
     
+    @staticmethod
+    def ping():
+        return RedisProtocol().encode(Response(Response("PING", "bulk_string"),"array"))
+        
     @staticmethod
     def info(data, server_meta):
         response = ""

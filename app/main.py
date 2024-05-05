@@ -19,6 +19,15 @@ server_meta = {
     "master_replid": "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb"
 }
 
+async def send_handshake(master_host, master_port):
+    handshake = RedisProtocol().encode(Command.ping())
+    reader, writer = await asyncio.open_connection(master_host, master_port)
+    try:
+        writer.write(handshake)
+        await writer.drain()
+    finally:
+        writer.close()
+
 async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEventLoop):
     global lock
     redis_protocol = RedisProtocol()
@@ -29,7 +38,7 @@ async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEven
             continue
         command = data[0].upper()
         if command == "PING":
-            response = Command.ping()
+            response = Command.pong()
             await loop.sock_sendall(client_socket, response.encode())
         elif command == "ECHO":
             response = Command.echo(data[1:])
@@ -80,8 +89,10 @@ if __name__ == "__main__":
         server_meta["role"] = "slave"
         server_meta["replica_host"] = args.replicaof[0]
         server_meta["replica_port"] = args.replicaof[1]
-    
-    master_repl_id = ''.join(choices(ascii_letters + digits, k=40))
-
+    if server_meta["role"] == "master":
+        server_meta["master_repl_offset"] = 0
+        server_meta["master_replid"] = ''.join(choices(ascii_letters + digits, k=40))
+    else:
+        asyncio.run(send_handshake(server_meta["replica_host"], int(server_meta["replica_port"])))
     lock = asyncio.Lock()
     asyncio.run(main(port=port))
