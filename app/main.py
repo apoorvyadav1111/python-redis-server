@@ -114,9 +114,9 @@ async def main(port: int):
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!")
     server_socket = socket.create_server(("localhost", port), reuse_port=True)
+    server_socket.setblocking(False)
     if server_meta["role"] == "slave":
         await send_handshake(server_meta["replica_host"], int(server_meta["replica_port"]))
-    server_socket.setblocking(False)
     loop = asyncio.get_event_loop()
     await listen_forever(server_socket, loop)
 
