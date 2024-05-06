@@ -131,8 +131,6 @@ if __name__ == "__main__":
     except ValueError:
         print("Invalid port")
         sys.exit(1)
-    lock = asyncio.Lock()
-    asyncio.run(main(port=port))
     if args.replicaof:
         server_meta["role"] = "slave"
         server_meta["replica_host"] = args.replicaof[0]
@@ -142,4 +140,5 @@ if __name__ == "__main__":
         server_meta["master_replid"] = ''.join(choices(ascii_letters + digits, k=40))
     else:
         asyncio.run(send_handshake(server_meta["replica_host"], int(server_meta["replica_port"])))
-
+    lock = asyncio.Lock()
+    asyncio.run(main(port=port))
