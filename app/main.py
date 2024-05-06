@@ -105,8 +105,6 @@ async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEven
 
 
 async def listen_forever(server_socket: socket.socket, loop: asyncio.AbstractEventLoop):
-    if server_meta["replica_host"] and server_meta["replica_port"]:
-        loop.create_task(send_handshake(server_meta["replica_host"], server_meta["replica_port"]))
     while True:
         client_socket, addr = await loop.sock_accept(server_socket)
         client_socket.setblocking(False)
@@ -141,4 +139,10 @@ if __name__ == "__main__":
         server_meta["master_repl_offset"] = 0
         server_meta["master_replid"] = ''.join(choices(ascii_letters + digits, k=40))
     lock = asyncio.Lock()
-    asyncio.run(main(port=port))
+    coroutines = []
+    server = asyncio.create_task(main(port=port))
+    coroutines.append(server)
+    if server_meta["role"] == "slave":
+        coroutines.append(send_handshake(server_meta["replica_host"], server_meta["replica_port"]))
+    await asyncio.gather(*coroutines)
+    # asyncio.run(main(port=port))
