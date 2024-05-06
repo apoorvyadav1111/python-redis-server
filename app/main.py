@@ -90,6 +90,7 @@ async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEven
             response = Command.info(data[1:], server_meta)
             await loop.sock_sendall(client_socket, response.encode())
         elif command == "REPLCONF":
+            print(data)
             if isMaster():
                 if (addr[0], data[2]) not in server_meta["replicas"]:
                     server_meta["replicas"].add((addr, data[2]))
