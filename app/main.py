@@ -92,6 +92,7 @@ async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEven
             await loop.sock_sendall(client_socket, response.encode())
         elif command == "REPLCONF":
             if isMaster():
+                print(addr)
                 if addr not in server_meta["replicas"]:
                     server_meta["replicas"][addr] = {}
                 server_meta["replicas"][addr]["listening-port"] = data[1]
