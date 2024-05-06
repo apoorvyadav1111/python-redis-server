@@ -75,10 +75,10 @@ async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEven
         elif command == "SET":
             async with lock:
                 response = Command.set(KEY_VALUE_STORE, data[1:])
-                await loop.sock_sendall(client_socket, response.encode())
-            if isMaster():
-                for replica_conn in server_meta["replicas"].values():
-                    await loop.sock_sendall(replica_conn, raw_data)
+                if isMaster():
+                    await loop.sock_sendall(client_socket, response.encode())
+                    for replica_conn in server_meta["replicas"].values():
+                        await loop.sock_sendall(replica_conn, raw_data)
         elif command == "GET":
             async with lock:
                 response = Command.get(KEY_VALUE_STORE, data[1])
