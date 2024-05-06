@@ -38,7 +38,7 @@ class RedisProtocol:
             'set': '~',
             'pushes': '>',
             'null_bulk_string': '$',
-            'rdb_file', '$',
+            'rdb_file': '$',
         }
     
     def tokenize(self,data):
