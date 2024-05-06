@@ -140,6 +140,7 @@ class RedisProtocol:
         elif data.type == 'null_bulk_string':
             return f"{resp_kind}-1\r\n"
         elif data.type == 'rdb_file':
+            print(f"{resp_kind}{len(data.data)}".encode()+b"\r\n"+data.data)
             return f"{resp_kind}{len(data.data)}".encode()+b"\r\n"+data.data
         return result
 
