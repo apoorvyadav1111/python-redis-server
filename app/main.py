@@ -10,6 +10,7 @@ from random import choices
 from string import ascii_letters, digits
 
 KEY_VALUE_STORE = RedisStore()
+EMPTY_RDB = "524544495330303131fa0972656469732d76657205372e322e30fa0a72656469732d62697473c040fa056374696d65c26d08bc65fa08757365642d6d656dc2b0c41000fa08616f662d62617365c000fff06e3bfec0ff5aa2"
 
 server_meta = {
     "role": "master",
@@ -81,7 +82,7 @@ async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEven
         elif command == "PSYNC":
             response = Command.respond_to_psync(server_meta["master_replid"], server_meta["master_repl_offset"])
             await loop.sock_sendall(client_socket, response.encode())
-            await loop.sock_sendall(client_socket, Command.send_rdb())
+            await loop.sock_sendall(client_socket, Command.send_rdb(bytes.fromhex(EMPTY_RDB)))
 
 
 

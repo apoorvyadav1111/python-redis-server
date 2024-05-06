@@ -64,5 +64,5 @@ class Command:
         return RedisProtocol().encode(Response(string, 'simple_string'))
     
     @staticmethod
-    def send_rdb():
-        return RedisProtocol().encode(Response("H", 'rdb_file'))
+    def send_rdb(data):
+        return RedisProtocol().encode(Response(data, 'rdb_file'))
