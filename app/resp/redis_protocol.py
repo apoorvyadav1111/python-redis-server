@@ -141,7 +141,6 @@ class RedisProtocol:
             return f"{resp_kind}-1\r\n"
         elif data.type == 'rdb_file':
             result = f"${len(data.data)}".encode() + b"\r\n" + data.data
-            print(result)
             return result
         return result
 

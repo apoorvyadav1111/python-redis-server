@@ -60,7 +60,7 @@ class Command:
 
     @staticmethod
     def respond_to_psync(repl_id, offset):
-        string = f"FULLRESYNC {repl_id} {offset}\r\n"
+        string = f"FULLRESYNC {repl_id} {offset}"
         return RedisProtocol().encode(Response(string, 'simple_string'))
     
     @staticmethod
