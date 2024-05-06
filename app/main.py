@@ -18,7 +18,7 @@ server_meta = {
     "replica_port": None,
     "master_repl_offset": 0,
     "master_replid": "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb",
-    "replicas" : set()
+    "replicas" : {}
 }
 
 def isMaster():
@@ -76,13 +76,8 @@ async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEven
             async with lock:
                 response = Command.set(KEY_VALUE_STORE, data[1:])
             if isMaster():
-                for replica in server_meta["replicas"]:
-                    print(replica)
-                    reader, writer = await asyncio.open_connection(replica[0], replica[1])
-                    writer.write(raw_data)
-                    await writer.drain()
-                    writer.close()
-                await loop.sock_sendall(client_socket, response.encode())
+                for replica_conn in server_meta["replicas"].values():
+                    await loop.sock_sendall(replica_conn, raw_data)
         elif command == "GET":
             async with lock:
                 response = Command.get(KEY_VALUE_STORE, data[1])
@@ -93,8 +88,7 @@ async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEven
         elif command == "REPLCONF":
             if data[1] == "listening-port":
                 if isMaster():
-                    if (addr[0], data[2]) not in server_meta["replicas"]:
-                        server_meta["replicas"].add((addr[0], data[2]))
+                    server_meta["replicas"][(addr[0],data[2]] = client_socket
             response = Command.respond_to_replconf()
             await loop.sock_sendall(client_socket, response.encode())
         elif command == "PSYNC":
