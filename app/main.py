@@ -77,6 +77,7 @@ async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEven
                 response = Command.set(KEY_VALUE_STORE, data[1:])
             if isMaster():
                 for replica_conn in server_meta["replicas"].values():
+                    print(raw_data)
                     await loop.sock_sendall(replica_conn, raw_data)
         elif command == "GET":
             async with lock:
