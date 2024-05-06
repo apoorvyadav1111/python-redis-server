@@ -113,7 +113,8 @@ async def listen_forever(server_socket: socket.socket, loop: asyncio.AbstractEve
 async def main(port: int):
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!")
-
+    if server_meta["role"] == "slave":
+        await send_handshake(server_meta["replica_host"], int(server_meta["replica_port"]))
     server_socket = socket.create_server(("localhost", port), reuse_port=True)
     server_socket.setblocking(False)
     loop = asyncio.get_event_loop()
@@ -138,7 +139,5 @@ if __name__ == "__main__":
     if server_meta["role"] == "master":
         server_meta["master_repl_offset"] = 0
         server_meta["master_replid"] = ''.join(choices(ascii_letters + digits, k=40))
-    else:
-        asyncio.run(send_handshake(server_meta["replica_host"], int(server_meta["replica_port"])))
     lock = asyncio.Lock()
     asyncio.run(main(port=port))
