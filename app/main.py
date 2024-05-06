@@ -81,7 +81,7 @@ async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEven
         elif command == "PSYNC":
             response = Command.respond_to_psync(server_meta["master_replid"], server_meta["master_repl_offset"])
             await loop.sock_sendall(client_socket, response.encode())
-            await loop.sock_sendall(client_socket, Command.send_rdb().encode())
+            await loop.sock_sendall(client_socket, Command.send_rdb())
 
 
 
