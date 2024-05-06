@@ -48,7 +48,7 @@ async def send_handshake(master_host, master_port):
         writer.write(handshake_3)
         await writer.drain()
         data = await reader.read(1024)
-        await reader.read(1024)
+
 
     finally:
         writer.close()
@@ -89,7 +89,7 @@ async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEven
                 rdb_data = base64.b64decode(f.read())
                 # client_socket.sendall(Command.send_rdb(rdb_data))
                 print("here")
-                await loop.sock_sendall(client_socket, "$0\r\n".encode())
+                await loop.sock_sendall(client_socket, "$0".encode())
 
 
 
