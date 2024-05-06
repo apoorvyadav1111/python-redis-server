@@ -62,3 +62,7 @@ class Command:
     def respond_to_psync(repl_id, offset):
         string = f"FULLRESYNC {repl_id} {offset}\r\n"
         return RedisProtocol().encode(Response(string, 'simple_string'))
+    
+    @staticmethod
+    def send_rdb():
+        return RedisProtocol().encode(Response("", 'rdb_file'))

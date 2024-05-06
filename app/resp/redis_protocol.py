@@ -37,7 +37,8 @@ class RedisProtocol:
             'map': '%',
             'set': '~',
             'pushes': '>',
-            'null_bulk_string': '$'
+            'null_bulk_string': '$',
+            'rdb_file', '$',
         }
     
     def tokenize(self,data):
@@ -138,6 +139,8 @@ class RedisProtocol:
                 result += f"{resp_kind}f\r\n"
         elif data.type == 'null_bulk_string':
             return f"{resp_kind}-1\r\n"
+        elif data.type == 'rdb_file':
+            return f"{resp_kind}{len(data.data)}\r\n{data.data}"
         return result
 
 
