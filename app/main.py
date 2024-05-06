@@ -18,7 +18,12 @@ server_meta = {
     "replica_port": None,
     "master_repl_offset": 0,
     "master_replid": "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb"
+    "replicas" : {
+    }
 }
+
+def isMaster():
+    return server_meta["role"] == "master"
 
 async def send_handshake(master_host, master_port):
     handshake_1 = Command.send_ping().encode()
@@ -53,11 +58,11 @@ async def send_handshake(master_host, master_port):
     finally:
         writer.close()
 
-async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEventLoop):
+async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEventLoop, addr: tuple):
     global lock
     redis_protocol = RedisProtocol()
-    while data := await loop.sock_recv(client_socket, 1024):
-        data = redis_protocol.parse(data.decode())
+    while raw_data := await loop.sock_recv(client_socket, 1024):
+        data = redis_protocol.parse(raw_data.decode())
         if not isinstance(data, list):
             await loop.sock_sendall(client_socket, b"-ERR\r\n")
             continue
@@ -71,7 +76,13 @@ async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEven
         elif command == "SET":
             async with lock:
                 response = Command.set(KEY_VALUE_STORE, data[1:])
-            await loop.sock_sendall(client_socket, response.encode())
+            if isMaster():
+                for replica in server_meta["replicas"]:
+                    reader, writer = await asyncio.open_connection(replica, server_meta["replicas"][replica]["listening-port"])
+                    writer.write(raw_data)
+                    await writer.drain()
+                    writer.close()
+                await loop.sock_sendall(client_socket, response.encode())
         elif command == "GET":
             async with lock:
                 response = Command.get(KEY_VALUE_STORE, data[1])
@@ -80,6 +91,10 @@ async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEven
             response = Command.info(data[1:], server_meta)
             await loop.sock_sendall(client_socket, response.encode())
         elif command == "REPLCONF":
+            if isMaster():
+                if addr not in server_meta["replicas"]:
+                    server_meta["replicas"][addr] = {}
+                server_meta["replicas"][addr]["listening-port"] = data[1]
             response = Command.respond_to_replconf()
             await loop.sock_sendall(client_socket, response.encode())
         elif command == "PSYNC":
@@ -98,7 +113,7 @@ async def listen_forever(server_socket: socket.socket, loop: asyncio.AbstractEve
     while True:
         client_socket, addr = await loop.sock_accept(server_socket)
         client_socket.setblocking(False)
-        loop.create_task(handle_client(client_socket, loop))
+        loop.create_task(handle_client(client_socket, loop, addr))
 
 async def main(port: int):
     # You can use print statements as follows for debugging, they'll be visible when running tests.
