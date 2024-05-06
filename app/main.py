@@ -83,7 +83,7 @@ async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEven
             response = Command.respond_to_psync(server_meta["master_replid"], server_meta["master_repl_offset"])
             await loop.sock_sendall(client_socket, response.encode())
             with open("app/empty.rdb", "rb") as f:
-                rdb_data = base64.b64encode(f.read())
+                rdb_data = base64.b64decode(f.read())
                 await loop.sock_sendall(client_socket, Command.send_rdb(rdb_data))
 
 
