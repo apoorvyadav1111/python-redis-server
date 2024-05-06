@@ -106,7 +106,7 @@ async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEven
 
 async def listen_forever(server_socket: socket.socket, loop: asyncio.AbstractEventLoop):
     if server_meta["replica_host"] and server_meta["replica_port"]:
-        send_handshake(server_meta["replica_host"], server_meta["replica_port"])
+        loop.create_task(send_handshake(server_meta["replica_host"], server_meta["replica_port"]))
     while True:
         client_socket, addr = await loop.sock_accept(server_socket)
         client_socket.setblocking(False)
