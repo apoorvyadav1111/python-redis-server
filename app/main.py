@@ -77,6 +77,7 @@ async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEven
                 response = Command.set(KEY_VALUE_STORE, data[1:])
             if isMaster():
                 for replica in server_meta["replicas"]:
+                    print(replica)
                     reader, writer = await asyncio.open_connection(replica[0], replica[1])
                     writer.write(raw_data)
                     await writer.drain()
