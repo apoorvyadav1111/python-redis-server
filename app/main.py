@@ -110,13 +110,22 @@ async def listen_forever(server_socket: socket.socket, loop: asyncio.AbstractEve
         client_socket.setblocking(False)
         loop.create_task(handle_client(client_socket, loop, addr))
 
-async def main(port: int):
-    # You can use print statements as follows for debugging, they'll be visible when running tests.
-    print("Logs from your program will appear here!")
+async def start_server(port: int):
     server_socket = socket.create_server(("localhost", port), reuse_port=True)
     server_socket.setblocking(False)
     loop = asyncio.get_event_loop()
     await listen_forever(server_socket, loop)
+
+async def main(port: int):
+    # You can use print statements as follows for debugging, they'll be visible when running tests.
+    print("Logs from your program will appear here!")
+    lock = asyncio.Lock()
+    coroutines = []
+    server = asyncio.create_task(start_server(port=port))
+    coroutines.append(server)
+    if server_meta["role"] == "slave":
+        coroutines.append(send_handshake(server_meta["replica_host"], server_meta["replica_port"]))
+    await asyncio.gather(*coroutines)
 
 
 if __name__ == "__main__":
@@ -138,11 +147,4 @@ if __name__ == "__main__":
     if server_meta["role"] == "master":
         server_meta["master_repl_offset"] = 0
         server_meta["master_replid"] = ''.join(choices(ascii_letters + digits, k=40))
-    lock = asyncio.Lock()
-    coroutines = []
-    server = asyncio.create_task(main(port=port))
-    coroutines.append(server)
-    if server_meta["role"] == "slave":
-        coroutines.append(send_handshake(server_meta["replica_host"], server_meta["replica_port"]))
-    await asyncio.gather(*coroutines)
-    # asyncio.run(main(port=port))
+    asyncio.run(main(port=port))
