@@ -116,9 +116,9 @@ async def main(port: int):
     server_socket = socket.create_server(("localhost", port), reuse_port=True)
     server_socket.setblocking(False)
     loop = asyncio.get_event_loop()
-    await listen_forever(server_socket, loop)
     if server_meta["role"] == "slave":
-        await send_handshake(server_meta["replica_host"], int(server_meta["replica_port"]))
+        loop.create_task(send_handshake(server_meta["replica_host"], int(server_meta["replica_port"])))
+    await listen_forever(server_socket, loop)
 
 
 if __name__ == "__main__":
