@@ -11,7 +11,7 @@ from string import ascii_letters, digits
 import base64
 
 KEY_VALUE_STORE = RedisStore()
-
+lock = asyncio.Lock()
 server_meta = {
     "role": "master",
     "replica_host": None,
@@ -119,7 +119,6 @@ async def start_server(port: int):
 async def main(port: int):
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!")
-    lock = asyncio.Lock()
     coroutines = []
     server = asyncio.create_task(start_server(port=port))
     coroutines.append(server)
