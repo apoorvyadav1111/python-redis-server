@@ -88,7 +88,7 @@ async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEven
         elif command == "REPLCONF":
             if data[1] == "listening-port":
                 if isMaster():
-                    server_meta["replicas"][(addr[0],data[2]] = client_socket
+                    server_meta["replicas"][(addr[0],data[2])] = client_socket
             response = Command.respond_to_replconf()
             await loop.sock_sendall(client_socket, response.encode())
         elif command == "PSYNC":
