@@ -84,7 +84,7 @@ async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEven
             await loop.sock_sendall(client_socket, response.encode())
             with open("app/empty.rdb", "rb") as f:
                 rdb_data = base64.b64decode(f.read())
-                client_socket.sendall(Command.send_rdb(rdb_data))
+                client_socket.sendall( b'$88\r\nREDIS0011\xfa\tredis-ver\x057.2.0\xfa\nredis-bits\xc0@\xfa\x05ctime\xc2m\x08\xbce\xfa\x08used-mem\xc2\xb0\xc4\x10\x00\xfa\x08aof-base\xc0\x00\xff\xf0n;\xfe\xc0\xffZ\xa2')
                 # await loop.sock_sendall(client_socket, Command.send_rdb(rdb_data))
 
 
