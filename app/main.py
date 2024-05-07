@@ -59,8 +59,8 @@ async def send_handshake(address, replica_port):
                 await writer.drain()
                 continue
             num_of_args = await reader.readuntil(b"\r\n")
-            num_of_args = int(num_of_args.decode().strip())
             original_data += num_of_args + b"\r\n"
+            num_of_args = int(num_of_args.decode().strip())
             for i in range(num_of_args):
                 data_kind = await reader.read(1)
                 original_data += data_kind
