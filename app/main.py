@@ -89,16 +89,16 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
             elif command == "SET":
                 async with lock:
                     response = Command.set(KEY_VALUE_STORE, data[1:])
-                    if isMaster():
-                        writer.write(response.encode())
-                        await writer.drain()
-                        for replica_conn in server_meta["replicas"].values():
-                            print("Sending to replica")
-                            replica_conn.write(response.encode())
-                            print("Sent to replica")
-                            await replica_conn.drain()
-                    else:
-                        print("In slave")
+                if isMaster():
+                    writer.write(response.encode())
+                    await writer.drain()
+                    for replica_conn in server_meta["replicas"].values():
+                        print("Sending to replica")
+                        replica_conn.write(response.encode())
+                        print("Sent to replica")
+                        await replica_conn.drain()
+                else:
+                    print("In slave")
             elif command == "GET":
                 async with lock:
                     response = Command.get(KEY_VALUE_STORE, data[1])
