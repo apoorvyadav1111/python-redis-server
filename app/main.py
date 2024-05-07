@@ -56,6 +56,7 @@ async def send_handshake(master_host, master_port):
 
     finally:
         writer.close()
+        await writer.wait_closed()
 
 
 
