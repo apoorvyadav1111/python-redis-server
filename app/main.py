@@ -70,7 +70,7 @@ async def send_handshake(address, replica_port):
                     data = int(data.decode().strip())
                     read_data = await reader.read(data + 2)
                     original_data += read_data
-
+            print(original_data)
             data = redis_protocol.parse(original_data.decode())
             if not isinstance(data, list):
                 writer.write("-ERR\r\n".encode())
