@@ -71,7 +71,7 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
         redis_protocol = RedisProtocol()
         while reader.at_eof() is False:
             raw_data = await reader.read(1024)
-            print(raw_data)
+            print(raw_data,"here")
             data = redis_protocol.parse(raw_data.decode())
             print(data)
             if not isinstance(data, list):
