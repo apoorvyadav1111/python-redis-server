@@ -33,7 +33,7 @@ async def send_handshake(address, replica_port):
         response = RedisProtocol().parse(data.decode())
         if response != "PONG":
             raise Exception("Handshake step 1 failed")
-        handshake_2_1 = Command.send_replconf("listening-port",replica_port).encode()
+        handshake_2_1 = Command.send_replconf("listening-port",str(replica_port)).encode()
         writer.write(handshake_2_1)
         await writer.drain()
         data = await reader.read(1024)
