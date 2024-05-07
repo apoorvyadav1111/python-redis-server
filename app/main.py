@@ -52,9 +52,8 @@ async def send_handshake(master_host, master_port):
         writer.write(handshake_3)
         await writer.drain()
         data = await reader.read(1024)
-
-
     finally:
+        print("Closing connection")
         writer.close()
         await writer.wait_closed()
 
@@ -141,7 +140,7 @@ async def main():
         print("Invalid port")
         sys.exit(1)
     server = asyncio.create_task(start_server(port=port))
-    await server()
+    coroutines = [server]
     if args.replicaof:
         server_meta["role"] = "slave"
         server_meta["replica_host"] = args.replicaof[0]
@@ -151,7 +150,8 @@ async def main():
         server_meta["master_replid"] = ''.join(choices(ascii_letters + digits, k=40))
     if server_meta["role"] == "slave":
         handshake = asyncio.create_task(send_handshake(server_meta["replica_host"], server_meta["replica_port"]))
-        await handshake()
+        coroutines.append(handshake)
+    await asyncio.gather(*coroutines)
 
 
 if __name__ == "__main__":
