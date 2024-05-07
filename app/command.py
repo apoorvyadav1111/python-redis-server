@@ -9,7 +9,6 @@ class Command:
     def get(redis_store, key):
         value = redis_store.get(key)
         if value is None:
-            print("Not found")
             return RedisProtocol().encode(Response(None, 'null_bulk_string'))
         return RedisProtocol().encode(Response(value, 'bulk_string'))
 
