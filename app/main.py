@@ -79,6 +79,7 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
                 continue
             command = data[0].upper()
             print(command)
+            print(data)
             if command == "PING":
                 response = Command.respond_to_ping()
                 writer.write(response.encode())
