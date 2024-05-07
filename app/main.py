@@ -90,7 +90,6 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
                         for replica_conn in server_meta["replicas"].values():
                             replica_conn.write(response.encode())
                             await replica_conn.drain()
-                    await asyncio.sleep(0.1)
             elif command == "GET":
                 async with lock:
                     response = Command.get(KEY_VALUE_STORE, data[1])
@@ -141,6 +140,9 @@ async def main():
     except ValueError:
         print("Invalid port")
         sys.exit(1)
+    coroutines = []
+    server = asyncio.create_task(start_server(port=port))
+    coroutines.append(server)
     if args.replicaof:
         server_meta["role"] = "slave"
         server_meta["replica_host"] = args.replicaof[0]
@@ -148,9 +150,6 @@ async def main():
     if server_meta["role"] == "master":
         server_meta["master_repl_offset"] = 0
         server_meta["master_replid"] = ''.join(choices(ascii_letters + digits, k=40))
-    coroutines = []
-    server = asyncio.create_task(start_server(port=port))
-    coroutines.append(server)
     if server_meta["role"] == "slave":
         handshake = asyncio.create_task(send_handshake(server_meta["replica_host"], server_meta["replica_port"]))
         coroutines.append(handshake)
