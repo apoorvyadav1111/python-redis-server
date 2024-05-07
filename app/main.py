@@ -55,7 +55,7 @@ async def send_handshake(master_host, master_port):
 
         while not reader.at_eof():
             data = await reader.read(1024)
-            print(data)
+            print("In Slave")
             if data == b"\n":
                 break
     finally:
