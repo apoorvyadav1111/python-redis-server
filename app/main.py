@@ -52,8 +52,13 @@ async def send_handshake(master_host, master_port):
         writer.write(handshake_3)
         await writer.drain()
         data = await reader.read(1024)
+
+        while not reader.at_eof():
+            data = await reader.read(1024)
+            print(data)
+            if data == b"\n":
+                break
     finally:
-        print("Closing connection")
         writer.close()
         await writer.wait_closed()
 
