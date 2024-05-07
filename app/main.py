@@ -57,77 +57,77 @@ async def send_handshake(master_host, master_port):
     finally:
         writer.close()
 
-async def handle_client(client_socket: socket.socket, loop: asyncio.AbstractEventLoop, addr: tuple):
+
+
+async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
     global lock
-    redis_protocol = RedisProtocol()
-    while raw_data := await loop.sock_recv(client_socket, 1024):
-        data = redis_protocol.parse(raw_data.decode())
-        if not isinstance(data, list):
-            await loop.sock_sendall(client_socket, b"-ERR\r\n")
-            continue
-        command = data[0].upper()
-        if command == "PING":
-            response = Command.respond_to_ping()
-            await loop.sock_sendall(client_socket, response.encode())
-        elif command == "ECHO":
-            response = Command.echo(data[1:])
-            await loop.sock_sendall(client_socket, response.encode())
-        elif command == "SET":
-            async with lock:
-                response = Command.set(KEY_VALUE_STORE, data[1:])
-                if isMaster():
-                    await loop.sock_sendall(client_socket, response.encode())
-                    for replica_conn in server_meta["replicas"].values():
-                        await loop.sock_sendall(replica_conn, raw_data)
-        elif command == "GET":
-            async with lock:
-                response = Command.get(KEY_VALUE_STORE, data[1])
-            await loop.sock_sendall(client_socket, response.encode())
-        elif command == "INFO":
-            response = Command.info(data[1:], server_meta)
-            await loop.sock_sendall(client_socket, response.encode())
-        elif command == "REPLCONF":
-            if data[1] == "listening-port":
-                if isMaster():
-                    server_meta["replicas"][(addr[0],data[2])] = client_socket
-            response = Command.respond_to_replconf()
-            await loop.sock_sendall(client_socket, response.encode())
-        elif command == "PSYNC":
-            response = Command.respond_to_psync(server_meta["master_replid"], server_meta["master_repl_offset"])
-            await loop.sock_sendall(client_socket, response.encode())
-            with open("app/empty.rdb", "rb") as f:
-                rdb_data = base64.b64decode(f.read())
-                await loop.sock_sendall(client_socket,Command.send_rdb(rdb_data))
+    try:
+        addr = writer.get_extra_info('peername')
+        redis_protocol = RedisProtocol()
+        while reader.at_eof() is False:
+            raw_data = await reader.read(1024)
+            data = redis_protocol.parse(raw_data.decode())
+            if not isinstance(data, list):
+                writer.write("-ERR\r\n".encode())
+                await writer.drain()
+                continue
+            command = data[0].upper()
+            if command == "PING":
+                response = Command.respond_to_ping()
+                writer.write(response.encode())
+                await writer.drain()
+            elif command == "ECHO":
+                response = Command.echo(data[1:])
+                writer.write(response.encode())
+                await writer.drain()
+            elif command == "SET":
+                async with lock:
+                    response = Command.set(KEY_VALUE_STORE, data[1:])
+                    if isMaster():
+                        writer.write(response.encode())
+                        await writer.drain()
+                        for replica_conn in server_meta["replicas"].values():
+                            replica_conn.write(response.encode())
+                            await replica_conn.drain()
+            elif command == "GET":
+                async with lock:
+                    response = Command.get(KEY_VALUE_STORE, data[1])
+                writer.write(response.encode())
+                await writer.drain()
+            elif command == "INFO":
+                response = Command.info(data[1:], server_meta)
+                writer.write(response.encode())
+                await writer.drain()
+            elif command == "REPLCONF":
+                if data[1] == "listening-port":
+                    if isMaster():
+                        server_meta["replicas"][addr] = writer
+                response = Command.respond_to_replconf()
+                writer.write(response.encode())
+                await writer.drain()
+            elif command == "PSYNC":
+                response = Command.respond_to_psync(server_meta["master_replid"], server_meta["master_repl_offset"])
+                writer.write(response.encode())
+                await writer.drain()
+                with open("app/empty.rdb", "rb") as f:
+                    rdb_data = base64.b64decode(f.read())
+                    writer.write(rdb_data)
+                    await writer.drain()
+    except Exception as e:
+        print(e)
+    finally:
+        writer.close()
+        await writer.wait_closed()
 
-
-
-
-
-
-async def listen_forever(server_socket: socket.socket, loop: asyncio.AbstractEventLoop):
-    while True:
-        client_socket, addr = await loop.sock_accept(server_socket)
-        client_socket.setblocking(False)
-        loop.create_task(handle_client(client_socket, loop, addr))
 
 async def start_server(port: int):
-    server_socket = socket.create_server(("localhost", port), reuse_port=True)
-    server_socket.setblocking(False)
-    loop = asyncio.get_event_loop()
-    await listen_forever(server_socket, loop)
+    server = await asyncio.start_server(handle_client, port=port)
+    async with server:
+        await server.serve_forever()
 
 async def main(port: int):
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!")
-    coroutines = []
-    server = asyncio.create_task(start_server(port=port))
-    coroutines.append(server)
-    if server_meta["role"] == "slave":
-        coroutines.append(send_handshake(server_meta["replica_host"], server_meta["replica_port"]))
-    await asyncio.gather(*coroutines)
-
-
-if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", help="Port number to listen on", type=int)
     parser.add_argument("--replicaof", help="Replicate data to another server", type=str, nargs=2)
@@ -146,4 +146,17 @@ if __name__ == "__main__":
     if server_meta["role"] == "master":
         server_meta["master_repl_offset"] = 0
         server_meta["master_replid"] = ''.join(choices(ascii_letters + digits, k=40))
-    asyncio.run(main(port=port))
+    coroutines = []
+    server = asyncio.create_task(start_server(port=port))
+    coroutines.append(server)
+    if server_meta["role"] == "slave":
+        coroutines.append(send_handshake(server_meta["replica_host"], server_meta["replica_port"]))
+    await asyncio.gather(*coroutines)
+
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("Exiting...")
+        sys.exit(0)
