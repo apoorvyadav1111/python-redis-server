@@ -14,8 +14,6 @@ KEY_VALUE_STORE = RedisStore()
 lock = asyncio.Lock()
 server_meta = {
     "role": "master",
-    "replica_host": None,
-    "replica_port": None,
     "master_repl_offset": 0,
     "master_replid": "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb",
     "replicas" : {}
@@ -154,13 +152,11 @@ async def main():
     coroutines = [server]
     if args.replicaof:
         server_meta["role"] = "slave"
-        server_meta["replica_host"] = args.replicaof[0]
-        server_meta["replica_port"] = args.replicaof[1]
     if server_meta["role"] == "master":
         server_meta["master_repl_offset"] = 0
         server_meta["master_replid"] = ''.join(choices(ascii_letters + digits, k=40))
     if server_meta["role"] == "slave":
-        handshake = asyncio.create_task(send_handshake(server_meta["replica_host"], server_meta["replica_port"]))
+        handshake = asyncio.create_task(send_handshake(args.replicaof))
         coroutines.append(handshake)
     await asyncio.gather(*coroutines)
 
