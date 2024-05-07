@@ -13,7 +13,8 @@ def main():
         "+PONG\r\n",
         "_\r\n",
         "#t\r\n",
-        "#f\r\n"
+        "#f\r\n",
+        "*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\n123\r\n*3\r\n$3\r\nSET\r\n$3\r\nbar\r\n$3\r\n456\r\n*3\r\n$3\r\nSET\r\n$3\r\nbaz\r\n$3\r\n789\r\n"
     ]
     correct_results = [
         ["PING"],
@@ -26,7 +27,8 @@ def main():
         "PONG",
         None,
         True,
-        False
+        False,
+        ["SET", "foo", "123", "SET", "bar", "456", "SET", "baz", "789"]
     ]
 
     cnt = 0
