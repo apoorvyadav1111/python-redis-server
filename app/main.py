@@ -66,6 +66,7 @@ async def send_handshake(address, replica_port):
 async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
     global lock
     try:
+        print("Connected")
         addr = writer.get_extra_info('peername')
         redis_protocol = RedisProtocol()
         while reader.at_eof() is False:
