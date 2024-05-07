@@ -103,7 +103,7 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
             elif command == "REPLCONF":
                 if data[1] == "listening-port":
                     if isMaster():
-                        server_meta["replicas"][addr] = writer
+                        server_meta["replicas"][(addr,data[2])] = writer
                 response = Command.respond_to_replconf()
                 writer.write(response.encode())
                 await writer.drain()
