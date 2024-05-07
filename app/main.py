@@ -150,7 +150,8 @@ async def main():
     server = asyncio.create_task(start_server(port=port))
     coroutines.append(server)
     if server_meta["role"] == "slave":
-        coroutines.append(send_handshake(server_meta["replica_host"], server_meta["replica_port"]))
+        handshake = asyncio.create_task(send_handshake(server_meta["replica_host"], server_meta["replica_port"]))
+        coroutines.append(handshake)
     await asyncio.gather(*coroutines)
 
 
