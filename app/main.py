@@ -71,12 +71,14 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
         redis_protocol = RedisProtocol()
         while reader.at_eof() is False:
             raw_data = await reader.read(1024)
+            print(raw_data)
             data = redis_protocol.parse(raw_data.decode())
             if not isinstance(data, list):
                 writer.write("-ERR\r\n".encode())
                 await writer.drain()
                 continue
             command = data[0].upper()
+            print(command)
             if command == "PING":
                 response = Command.respond_to_ping()
                 writer.write(response.encode())
