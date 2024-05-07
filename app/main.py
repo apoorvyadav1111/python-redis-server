@@ -87,6 +87,7 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
                 writer.write(response.encode())
                 await writer.drain()
             elif command == "SET":
+                print("HERE", server_meta["role"])
                 async with lock:
                     response = Command.set(KEY_VALUE_STORE, data[1:])
                 if isMaster():
