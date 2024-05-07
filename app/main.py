@@ -124,6 +124,7 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
 async def start_server(port: int):
     server = await asyncio.start_server(handle_client, port=port)
     async with server:
+        asyncio.sleep(0.1)
         await server.serve_forever()
 
 async def main():
