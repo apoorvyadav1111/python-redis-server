@@ -50,13 +50,79 @@ async def send_handshake(address, replica_port):
         handshake_3 = Command.send_psync("?", "-1").encode()
         writer.write(handshake_3)
         await writer.drain()
-        data = await reader.read(1024)
 
-        while not reader.at_eof():
-            data = await reader.read(1024)
-            print(data,"tehre")
-            if data == b"\n":
-                break
+        redis_protocol = RedisProtocol()
+        while reader.at_eof() is False:
+            original_data = await reader.read(1)
+            if original_data != b"*":
+                writer.write("-ERR\r\n".encode())
+                await writer.drain()
+                continue
+            num_of_args = await reader.readuntil(b"\r\n")
+            num_of_args = int(num_of_args.decode().strip())
+            original_data += num_of_args + b"\r\n"
+            for i in range(num_of_args):
+                data_kind = await reader.read(1)
+                original_data += data_kind
+                if data_kind == b"$":
+                    data = await reader.readuntil(b"\r\n")
+                    original_data += data + b"\r\n"
+                    data = int(data.decode().strip())
+                    read_data = await reader.read(data + 2)
+                    original_data += read_data
+
+            data = redis_protocol.parse(original_data.decode())
+            if not isinstance(data, list):
+                writer.write("-ERR\r\n".encode())
+                await writer.drain()
+                continue
+            command = data[0].upper()
+            if command == "PING":
+                response = Command.respond_to_ping()
+                writer.write(response.encode())
+                await writer.drain()
+            elif command == "ECHO":
+                response = Command.echo(data[1:])
+                writer.write(response.encode())
+                await writer.drain()
+            elif command == "SET":
+                print("HERE", server_meta["role"])
+                async with lock:
+                    response = Command.set(KEY_VALUE_STORE, data[1:])
+                if isMaster():
+                    writer.write(response.encode())
+                    await writer.drain()
+                    for replica_conn in server_meta["replicas"].values():
+                        print("Sending to replica")
+                        replica_conn.write(response.encode())
+                        print("Sent to replica")
+                        await replica_conn.drain()
+                else:
+                    print("In slave")
+            elif command == "GET":
+                async with lock:
+                    response = Command.get(KEY_VALUE_STORE, data[1])
+                writer.write(response.encode())
+                await writer.drain()
+            elif command == "INFO":
+                response = Command.info(data[1:], server_meta)
+                writer.write(response.encode())
+                await writer.drain()
+            elif command == "REPLCONF":
+                if data[1] == "listening-port":
+                    if isMaster():
+                        server_meta["replicas"][(addr,data[2])] = writer
+                response = Command.respond_to_replconf()
+                writer.write(response.encode())
+                await writer.drain()
+            elif command == "PSYNC":
+                response = Command.respond_to_psync(server_meta["master_replid"], server_meta["master_repl_offset"])
+                writer.write(response.encode())
+                await writer.drain()
+                with open("app/empty.rdb", "rb") as f:
+                    rdb_data = base64.b64decode(f.read())
+                    writer.write(rdb_data)
+                    await writer.drain()
     finally:
         writer.close()
         await writer.wait_closed()
