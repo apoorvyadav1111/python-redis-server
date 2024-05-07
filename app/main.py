@@ -59,14 +59,14 @@ async def send_handshake(address, replica_port):
                 await writer.drain()
                 continue
             num_of_args = await reader.readuntil(b"\r\n")
-            original_data += num_of_args + b"\r\n"
+            original_data += num_of_args
             num_of_args = int(num_of_args.decode().strip())
             for i in range(num_of_args):
                 data_kind = await reader.read(1)
                 original_data += data_kind
                 if data_kind == b"$":
                     data = await reader.readuntil(b"\r\n")
-                    original_data += data + b"\r\n"
+                    original_data += data
                     data = int(data.decode().strip())
                     read_data = await reader.read(data + 2)
                     original_data += read_data
