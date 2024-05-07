@@ -141,7 +141,6 @@ async def main():
         print("Invalid port")
         sys.exit(1)
     server = asyncio.create_task(start_server(port=port))
-    await asyncio.run(server)
     if args.replicaof:
         server_meta["role"] = "slave"
         server_meta["replica_host"] = args.replicaof[0]
@@ -151,7 +150,6 @@ async def main():
         server_meta["master_replid"] = ''.join(choices(ascii_letters + digits, k=40))
     if server_meta["role"] == "slave":
         handshake = asyncio.create_task(send_handshake(server_meta["replica_host"], server_meta["replica_port"]))
-        await asyncio.run(handshake)
 
 
 if __name__ == "__main__":
