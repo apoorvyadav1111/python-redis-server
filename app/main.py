@@ -22,9 +22,9 @@ server_meta = {
 def isMaster():
     return server_meta["role"] == "master"
 
-async def send_handshake(master_host, master_port):
+async def send_handshake(address, port):
     handshake_1 = Command.send_ping().encode()
-    reader, writer = await asyncio.open_connection(master_host, master_port)
+    reader, writer = await asyncio.open_connection(address)
     try:
         writer.write(handshake_1)
         await writer.drain()
@@ -32,7 +32,7 @@ async def send_handshake(master_host, master_port):
         response = RedisProtocol().parse(data.decode())
         if response != "PONG":
             raise Exception("Handshake step 1 failed")
-        handshake_2_1 = Command.send_replconf("listening-port", "6380").encode()
+        handshake_2_1 = Command.send_replconf("listening-port",port).encode()
         writer.write(handshake_2_1)
         await writer.drain()
         data = await reader.read(1024)
@@ -156,7 +156,7 @@ async def main():
         server_meta["master_repl_offset"] = 0
         server_meta["master_replid"] = ''.join(choices(ascii_letters + digits, k=40))
     if server_meta["role"] == "slave":
-        handshake = asyncio.create_task(send_handshake(args.replicaof))
+        handshake = asyncio.create_task(send_handshake(args.replicaof, args.port))
         coroutines.append(handshake)
     await asyncio.gather(*coroutines)
 
