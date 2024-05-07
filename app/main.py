@@ -92,6 +92,7 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
                         writer.write(response.encode())
                         await writer.drain()
                         for replica_conn in server_meta["replicas"].values():
+                            print("Sending to replica")
                             replica_conn.write(response.encode())
                             print("Sent to replica")
                             await replica_conn.drain()
