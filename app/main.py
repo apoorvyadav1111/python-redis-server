@@ -22,9 +22,10 @@ server_meta = {
 def isMaster():
     return server_meta["role"] == "master"
 
-async def send_handshake(address, port):
+async def send_handshake(address, replica_port):
     handshake_1 = Command.send_ping().encode()
-    reader, writer = await asyncio.open_connection(address)
+    host, port = address
+    reader, writer = await asyncio.open_connection(host, port)
     try:
         writer.write(handshake_1)
         await writer.drain()
@@ -32,7 +33,7 @@ async def send_handshake(address, port):
         response = RedisProtocol().parse(data.decode())
         if response != "PONG":
             raise Exception("Handshake step 1 failed")
-        handshake_2_1 = Command.send_replconf("listening-port",port).encode()
+        handshake_2_1 = Command.send_replconf("listening-port",replica_port).encode()
         writer.write(handshake_2_1)
         await writer.drain()
         data = await reader.read(1024)
