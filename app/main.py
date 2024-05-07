@@ -70,10 +70,25 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
         addr = writer.get_extra_info('peername')
         redis_protocol = RedisProtocol()
         while reader.at_eof() is False:
-            raw_data = await reader.read(1024)
-            print(raw_data,"here", server_meta["role"])
-            data = redis_protocol.parse(raw_data.decode())
-            print(data)
+            original_data = await reader.read(1)
+            if original_data != b"*":
+                writer.write("-ERR\r\n".encode())
+                await writer.drain()
+                continue
+            num_of_args = await reader.readuntil(b"\r\n")
+            num_of_args = int(num_of_args.decode().strip())
+            original_data += num_of_args + b"\r\n"
+            for i in range(num_of_args):
+                data_kind = await reader.read(1)
+                original_data += data_kind
+                if data_kind == b"$":
+                    data = await reader.readuntil(b"\r\n")
+                    original_data += data + b"\r\n"
+                    data = int(data.decode().strip())
+                    read_data = await reader.read(data + 2)
+                    original_data += read_data
+
+            data = redis_protocol.parse(original_data.decode())
             if not isinstance(data, list):
                 writer.write("-ERR\r\n".encode())
                 await writer.drain()
