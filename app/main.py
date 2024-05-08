@@ -50,6 +50,7 @@ async def send_handshake(address, replica_port):
         handshake_3 = Command.send_psync("?", "-1").encode()
         writer.write(handshake_3)
         await writer.drain()
+        await reader.readuntil(b"\r\n")
         data = await reader.readuntil(b"\r\n")
         await reader.read(int(data[1:-2]))
 
