@@ -52,7 +52,6 @@ async def send_handshake(address, replica_port):
         await writer.drain()
         data = await reader.read(1024)
         
-        command_count = 0
         redis_protocol = RedisProtocol()
         while reader.at_eof() is False:
             original_data = await reader.read(1)
