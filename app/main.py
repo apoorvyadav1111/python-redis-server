@@ -52,7 +52,7 @@ async def send_handshake(address, replica_port):
         await writer.drain()
         data = await reader.read(1024)
         print(data)
-        
+
         redis_protocol = RedisProtocol()
         while reader.at_eof() is False:
             original_data = await reader.read(1)
@@ -123,7 +123,7 @@ async def send_handshake(address, replica_port):
                 await writer.drain()
                 with open("app/empty.rdb", "rb") as f:
                     rdb_data = base64.b64decode(f.read())
-                    writer.write(rdb_data)
+                    writer.write("$".encode() + str(len(rdb_data)).encode() + b"\r\n" + rdb_data)
                     await writer.drain()
     finally:
         writer.close()
