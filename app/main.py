@@ -1,7 +1,7 @@
 # Uncomment this to pass the first stage
 import socket
 import asyncio
-from app.resp.redis_protocol import RedisProtocol
+from app.resp.redis_protocol import RedisProtocol, Response
 from app.key_value_store import RedisStore
 from app.command import Command
 import sys
@@ -51,7 +51,6 @@ async def send_handshake(address, replica_port):
         writer.write(handshake_3)
         await writer.drain()
         data = await reader.read(1024)
-        print(data)
 
         redis_protocol = RedisProtocol()
         while reader.at_eof() is False:
@@ -72,23 +71,13 @@ async def send_handshake(address, replica_port):
                     data = int(data.decode().strip())
                     read_data = await reader.read(data + 2)
                     original_data += read_data
-            print(original_data)
             data = redis_protocol.parse(original_data.decode())
             if not isinstance(data, list):
                 writer.write("-ERR\r\n".encode())
                 await writer.drain()
                 continue
             command = data[0].upper()
-            if command == "PING":
-                response = Command.respond_to_ping()
-                writer.write(response.encode())
-                await writer.drain()
-            elif command == "ECHO":
-                response = Command.echo(data[1:])
-                writer.write(response.encode())
-                await writer.drain()
-            elif command == "SET":
-                print("HERE", server_meta["role"])
+            if command == "SET":
                 async with lock:
                     response = Command.set(KEY_VALUE_STORE, data[1:])
                     writer.write(response.encode())
@@ -99,20 +88,9 @@ async def send_handshake(address, replica_port):
                             replica_conn.write(response.encode())
                             print("Sent to replica")
                             await replica_conn.drain()
-            elif command == "GET":
-                async with lock:
-                    response = Command.get(KEY_VALUE_STORE, data[1])
-                writer.write(response.encode())
-                await writer.drain()
-            elif command == "INFO":
-                response = Command.info(data[1:], server_meta)
-                writer.write(response.encode())
-                await writer.drain()
             elif command == "REPLCONF":
-                if data[1] == "listening-port":
-                    if isMaster():
-                        server_meta["replicas"][(addr,data[2])] = writer
-                response = Command.respond_to_replconf()
+                if data[1] == "GETACK" and data[2] == "*":
+                    response = redis_protocol.encode(Response([Response("REPLCONF",'bulk_string'), Response('ACK', 'bulkstring'), Response('0', 'bulkstring')], "array"))
                 writer.write(response.encode())
                 await writer.drain()
             elif command == "PSYNC":
