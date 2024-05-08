@@ -84,14 +84,6 @@ async def send_handshake(address, replica_port):
             if command == "SET":
                 async with lock:
                     response = Command.set(KEY_VALUE_STORE, data[1:])
-                    writer.write(response.encode())
-                    await writer.drain()
-                    if isMaster():
-                        for replica_conn in server_meta["replicas"].values():
-                            print("Sending to replica")
-                            replica_conn.write(response.encode())
-                            print("Sent to replica")
-                            await replica_conn.drain()
             elif command == "REPLCONF":
                 if data[1] == "GETACK" and data[2] == "*":
                     response = redis_protocol.encode(Response([Response("REPLCONF",'bulk_string'), Response('ACK', 'bulk_string'), Response(str(command_count), 'bulk_string')], "array"))
