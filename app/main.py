@@ -105,6 +105,7 @@ async def send_handshake(address, replica_port):
                     rdb_data = base64.b64decode(f.read())
                     writer.write("$".encode() + str(len(rdb_data)).encode() + b"\r\n" + rdb_data)
                     await writer.drain()
+            command_count += len(original_data)
     finally:
         writer.close()
         await writer.wait_closed()
