@@ -172,7 +172,6 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
                 print("HERE", server_meta["role"])
                 async with lock:
                     response = Command.set(KEY_VALUE_STORE, data[1:])
-                if isMaster():
                     writer.write(response.encode())
                     await writer.drain()
                     for replica_conn in server_meta["replicas"].values():
