@@ -93,11 +93,12 @@ async def send_handshake(address, replica_port):
                     response = Command.set(KEY_VALUE_STORE, data[1:])
                     writer.write(response.encode())
                     await writer.drain()
-                    for replica_conn in server_meta["replicas"].values():
-                        print("Sending to replica")
-                        replica_conn.write(response.encode())
-                        print("Sent to replica")
-                        await replica_conn.drain()
+                    if isMaster():
+                        for replica_conn in server_meta["replicas"].values():
+                            print("Sending to replica")
+                            replica_conn.write(response.encode())
+                            print("Sent to replica")
+                            await replica_conn.drain()
             elif command == "GET":
                 async with lock:
                     response = Command.get(KEY_VALUE_STORE, data[1])
