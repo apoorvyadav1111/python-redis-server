@@ -50,8 +50,10 @@ async def send_handshake(address, replica_port):
         handshake_3 = Command.send_psync("?", "-1").encode()
         writer.write(handshake_3)
         await writer.drain()
-        data = await reader.read(1024)
-        
+        data = await reader.readuntil(b"\r\n")
+        await reader.read(int(data[1:-2]))
+
+        command_count = 0
         redis_protocol = RedisProtocol()
         while reader.at_eof() is False:
             original_data = await reader.read(1)
