@@ -94,7 +94,7 @@ async def send_handshake(address, replica_port):
                             await replica_conn.drain()
             elif command == "REPLCONF":
                 if data[1] == "GETACK" and data[2] == "*":
-                    response = redis_protocol.encode(Response([Response("REPLCONF",'bulk_string'), Response('ACK', 'bulk_string'), Response('0', 'bulk_string')], "array"))
+                    response = redis_protocol.encode(Response([Response("REPLCONF",'bulk_string'), Response('ACK', 'bulk_string'), Response(str(command_count), 'bulk_string')], "array"))
                     writer.write(response.encode())
                     await writer.drain()
             elif command == "PSYNC":
