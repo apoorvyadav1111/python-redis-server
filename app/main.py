@@ -73,7 +73,6 @@ async def send_handshake(address, replica_port):
                     read_data = await reader.read(data + 2)
                     original_data += read_data
             
-            command_count += len(original_data)
             data = redis_protocol.parse(original_data.decode())
             if not isinstance(data, list):
                 writer.write("-ERR\r\n".encode())
@@ -104,6 +103,7 @@ async def send_handshake(address, replica_port):
                     rdb_data = base64.b64decode(f.read())
                     writer.write("$".encode() + str(len(rdb_data)).encode() + b"\r\n" + rdb_data)
                     await writer.drain()
+            command_count += len(original_data)
     finally:
         writer.close()
         await writer.wait_closed()
