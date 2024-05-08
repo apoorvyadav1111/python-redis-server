@@ -179,8 +179,6 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
                         replica_conn.write(response.encode())
                         print("Sent to replica")
                         await replica_conn.drain()
-                else:
-                    print("In slave")
             elif command == "GET":
                 async with lock:
                     response = Command.get(KEY_VALUE_STORE, data[1])
