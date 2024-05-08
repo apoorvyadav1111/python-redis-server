@@ -206,7 +206,7 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
                 await writer.drain()
                 with open("app/empty.rdb", "rb") as f:
                     rdb_data = base64.b64decode(f.read())
-                    writer.write(rdb_data)
+                    writer.write("$".encode() + str(len(rdb_data)).encode() + b"\r\n" + rdb_data)
                     await writer.drain()
     except Exception as e:
         print(e)
