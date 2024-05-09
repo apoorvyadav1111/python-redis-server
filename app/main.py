@@ -178,6 +178,10 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
                     rdb_data = base64.b64decode(f.read())
                     writer.write("$".encode() + str(len(rdb_data)).encode() + b"\r\n" + rdb_data)
                     await writer.drain()
+            elif command == "WAIT":
+                response = RedisProtocol().encode(Response("0", 'integer'))
+                writer.write(response.encode())
+                await writer.drain()
     except Exception as e:
         print(e)
     finally:
