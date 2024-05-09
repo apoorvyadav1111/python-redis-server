@@ -179,7 +179,7 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
                     writer.write("$".encode() + str(len(rdb_data)).encode() + b"\r\n" + rdb_data)
                     await writer.drain()
             elif command == "WAIT":
-                response = RedisProtocol().encode(Response("0", 'integer'))
+                response = RedisProtocol().encode(Response(str(len(server_meta["replicas"].values())), 'integer'))
                 writer.write(response.encode())
                 await writer.drain()
     except Exception as e:
