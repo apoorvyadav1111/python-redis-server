@@ -19,6 +19,8 @@ server_meta = {
     "replicas" : {}
 }
 
+REPLICA_ACK_QUEUE = asyncio.Queue()
+
 def isMaster():
     return server_meta["role"] == "master"
 
@@ -108,6 +110,7 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
     global lock
     try:
         print("Connected", server_meta["role"])
+        previous_command = None
         addr = writer.get_extra_info('peername')
         redis_protocol = RedisProtocol()
         while reader.at_eof() is False:
@@ -167,6 +170,8 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
                 if data[1] == "listening-port":
                     if isMaster():
                         server_meta["replicas"][(addr,data[2])] = writer
+                elif data[1] == "ACK":
+                    await REPLICA_ACK_QUEUE.put("1")
                 response = Command.respond_to_replconf()
                 writer.write(response.encode())
                 await writer.drain()
@@ -179,9 +184,21 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
                     writer.write("$".encode() + str(len(rdb_data)).encode() + b"\r\n" + rdb_data)
                     await writer.drain()
             elif command == "WAIT":
+                expected_count = int(data[1])
+                wait_time_in_seconds = int(data[2])/1000
+                if previous_command == "SET" and expected_count > 0:
+                    for replica_conn in server_meta["replicas"].values():
+                        command = redis_protocol.encode(Response([Response("REPLCONF",'bulk_string'), Response('ACK', 'bulk_string'), Response('*', 'bulk_string')], "array"))
+                        await replica_conn.drain()
+                    await asyncio.sleep(wait_time_in_seconds)
+                    count = REPLICA_ACK_QUEUE.qsize()
                 response = RedisProtocol().encode(Response(str(len(server_meta["replicas"].values())), 'integer'))
                 writer.write(response.encode())
                 await writer.drain()
+                while not REPLICA_ACK_QUEUE.empty():
+                    await REPLICA_ACK_QUEUE.get()
+                    REPLICA_ACK_QUEUE.task_done()
+            previous_command = command
     except Exception as e:
         print(e)
     finally:
