@@ -193,7 +193,7 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
                         await replica_conn.drain()
                     await asyncio.sleep(wait_time_in_seconds)
                     count = REPLICA_ACK_QUEUE.qsize()
-                response = RedisProtocol().encode(Response(str(len(server_meta["replicas"].values())), 'integer'))
+                response = RedisProtocol().encode(Response(str(count), 'integer'))
                 writer.write(response.encode())
                 await writer.drain()
                 while not REPLICA_ACK_QUEUE.empty():
