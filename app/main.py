@@ -188,7 +188,7 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
                 wait_time_in_seconds = int(data[2])/1000
                 if previous_command == "SET" and expected_count > 0:
                     for replica_conn in server_meta["replicas"].values():
-                        command = redis_protocol.encode(Response([Response("REPLCONF",'bulk_string'), Response('ACK', 'bulk_string'), Response('*', 'bulk_string')], "array"))
+                        command = redis_protocol.encode(Response([Response("REPLCONF",'bulk_string'), Response('GETACK', 'bulk_string'), Response('*', 'bulk_string')], "array"))
                         await replica_conn.drain()
                     await asyncio.sleep(wait_time_in_seconds)
                     count = REPLICA_ACK_QUEUE.qsize()
